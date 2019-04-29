@@ -1,0 +1,25 @@
+def openfile(filename)
+  return csvsheets
+
+endsheet = []
+for sheet in csvsheet:
+  if sheet == judgement
+    endsheet = judgement_code_long(endsheet)
+    judgement_code_wide()
+
+def judgementcode():
+  with open(file, newline='') as csvfile:
+      reader = csv.DictReader(csvfile)
+      reader2 = csv.DictReader(csvfile2)
+      endfile = {}
+      newrow={}
+      for row1,row2 in reader1,reader2:
+        ID = row['identification_id']
+        SubjID = ID[0:4]
+
+        timepoion = ID[5:6]
+        newrow['ID'] = Subj
+        if SubjID in endsheet
+          endsheet[SubjID] = {endsheet,newrow}
+        else:
+          

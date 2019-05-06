@@ -69,6 +69,24 @@ def smushNames(df, sheet):
   df.columns = newNames
   return df
 
+def dropColumns(df):
+  #drop redundant columns
+  cols = []
+
+  for column in df.columns:
+    if ('organization_name' not in column and
+    'configuration_id' not in column and
+    'evaluation_id' not in column and
+    'identification_id' not in column and
+    'examiner_id' not in column and
+    'birth_date' not in column and
+    'assessment_time_start' not in column and
+    'sex' not in column):
+      cols.append(column)
+
+  df=df[cols]
+  return df
+
 
 def clientLong(xl):
 
@@ -81,8 +99,8 @@ def clientLong(xl):
 
   dfClientsFinal = dfClients.pivot_table(index=['subID'],
                            columns=['TP'],
-                           aggfunc=lambda x: ' !!!!!!!!! '.join(x)
-                           #aggfunc='first'
+                           #aggfunc=lambda x: ' !!!!!!!!! '.join(x)
+                           aggfunc='first'
                            )#.reset_index()
 
   dfClientsFinal.to_csv('dfClientsFinal.csv',index=True)
@@ -104,13 +122,13 @@ def demoLong(xl):
 
   dfDemos = dfDemos[(~dfDemos['identification_id'].str.contains('demo')) 
                   & (~dfDemos['identification_id'].str.contains('test'))]
-
+  
   dfDemos = splitIDs(dfDemos)
 
   dfDemosFinal = dfDemos.pivot_table(index=['subID'],
                            columns=['TP', 'task', 'demonum'],
-                           aggfunc=lambda x: ' !!!!!!!!! '.join(x)
-                           #aggfunc='first'
+                           #aggfunc=lambda x: ' !!!!!!!!! '.join(x)
+                           aggfunc='first'
                            )#.reset_index()
 
   dfDemosFinal.to_csv('dfDemosFinal.csv',index=True)
@@ -120,6 +138,8 @@ def demoLong(xl):
   dfDemosFinal = smushNames(dfDemosFinal, 'demo')
 
   dfDemosFinal = dfDemosFinal.drop([0,1,2,3])
+
+  dfDemosFinal = dropColumns(dfDemosFinal)
 
   dfDemosFinal.to_csv('dfDemosFinal.csv',index=False)
 
@@ -138,8 +158,8 @@ def controlLong(xl):
 
   dfControlFinal = dfControl.pivot_table(index=['subID'], 
                            columns=['TP','lap_number'],
-                           aggfunc=lambda x: ' !!!!!!!!! '.join(x)
-                           #aggfunc='first'
+                           #aggfunc=lambda x: ' !!!!!!!!! '.join(x)
+                           aggfunc='first'
                            )#.reset_index()
 
   dfControlFinal.to_csv('dfControlFinal.csv',index=True) #put into csv
@@ -148,6 +168,8 @@ def controlLong(xl):
   dfControlFinal = smushNames(dfControlFinal, 'control') #update column names
 
   dfControlFinal = dfControlFinal.drop([0,1,2]) #drop other column names
+
+  dfControlFinal = dropColumns(dfControlFinal) #drop redundant columns
 
   dfControlFinal.to_csv('dfControlFinal.csv',index=False) #output csv
 
@@ -162,11 +184,11 @@ def judgementLong(xl):
                           & (~dfJudgement['identification_id'].str.contains('test'))]
 
   dfJudgement = splitIDs(dfJudgement)
-
+  
   dfJudgementFinal = dfJudgement.pivot_table(index=['subID'],
                            columns=['TP','trial_stage','trial_number'],
-                           aggfunc=lambda x: ' !!!!!!!!! '.join(x)
-                           #aggfunc='first'
+                           #aggfunc=lambda x: ' !!!!!!!!! '.join(x)
+                           aggfunc='first'
                            )#.reset_index()
 
   dfJudgementFinal.to_csv('dfJudgementFinal.csv',index=True)
@@ -175,6 +197,8 @@ def judgementLong(xl):
   dfJudgementFinal = smushNames(dfJudgementFinal, 'judgement')
 
   dfJudgementFinal = dfJudgementFinal.drop([0,1,2,3])
+
+  dfJudgementFinal = dropColumns(dfJudgementFinal)
 
   dfJudgementFinal.to_csv('dfJudgementFinal.csv',index=False)
 
@@ -192,16 +216,19 @@ def memoryLong(xl):
 
   dfMemoryFinal = dfMemory.pivot_table(index=['subID'],
                            columns=['TP','trial_stage','trial_number'],
-                           aggfunc=lambda x: ' !!!!!!!!! '.join(x)
-                           #aggfunc='first'
+                           #aggfunc=lambda x: ' !!!!!!!!! '.join(x)
+                           aggfunc='first'
                            )#.reset_index()
 
   dfMemoryFinal.to_csv('dfMemoryFinal.csv',index=True)
+
   dfMemoryFinal = pd.read_csv('dfMemoryFinal.csv')
 
   dfMemoryFinal = smushNames(dfMemoryFinal, 'memory')
 
   dfMemoryFinal = dfMemoryFinal.drop([0,1,2,3])
+
+  dfMemoryFinal = dropColumns(dfMemoryFinal)
 
   dfMemoryFinal.to_csv('dfMemoryFinal.csv',index=False)
 
@@ -214,7 +241,7 @@ def reactionLong(xl):
 
   dfReaction = dfReaction[(~dfReaction['identification_id'].str.contains('demo'))
                        & (~dfReaction['identification_id'].str.contains('test'))]
-
+  
   dfReaction = splitIDs(dfReaction)
 
   dfReactionFinal = dfReaction.pivot_table(index=['subID'],
@@ -229,6 +256,8 @@ def reactionLong(xl):
   dfReactionFinal = smushNames(dfReactionFinal, 'reaction')
 
   dfReactionFinal = dfReactionFinal.drop([0,1,2,3])
+
+  dfReactionFinal = dropColumns(dfReactionFinal)
 
   dfReactionFinal.to_csv('dfReactionFinal.csv',index=False)
 

@@ -1,4 +1,5 @@
 import pandas as pd
+from functools import reduce
 
 
 def splitIDs(df):
@@ -53,7 +54,7 @@ def smushNames(df, sheet):
       else:
         new = name + '_' + df.iloc[0, index] + '_' + df.iloc[1, index] + '_demonum' + df.iloc[2, index]
         newNames.append(new)
-        index = index + 1
+      index = index + 1
 
   #client sheet
   if (sheet == 'clients'):
@@ -63,10 +64,11 @@ def smushNames(df, sheet):
       else:
         new = name + '_' + df.iloc[0, index]
         newNames.append(new)
-        index = index + 1
+      index = index + 1
 
   df.columns = newNames
   return df
+
 
 def clientLong(xl):
 
@@ -92,6 +94,8 @@ def clientLong(xl):
   dfClientsFinal = dfClientsFinal.drop([0,1])
 
   dfClientsFinal.to_csv('dfClientsFinal.csv',index=False)
+
+  return(dfClientsFinal)
 
 
 def demoLong(xl):
@@ -119,6 +123,8 @@ def demoLong(xl):
 
   dfDemosFinal.to_csv('dfDemosFinal.csv',index=False)
 
+  return(dfDemosFinal)
+
 
 def controlLong(xl):
   #outputs long format control sheet to csv
@@ -145,6 +151,8 @@ def controlLong(xl):
 
   dfControlFinal.to_csv('dfControlFinal.csv',index=False) #output csv
 
+  return(dfControlFinal)
+
 
 def judgementLong(xl):
 
@@ -169,6 +177,8 @@ def judgementLong(xl):
   dfJudgementFinal = dfJudgementFinal.drop([0,1,2,3])
 
   dfJudgementFinal.to_csv('dfJudgementFinal.csv',index=False)
+
+  return(dfJudgementFinal)
 
 
 def memoryLong(xl):
@@ -195,6 +205,8 @@ def memoryLong(xl):
 
   dfMemoryFinal.to_csv('dfMemoryFinal.csv',index=False)
 
+  return(dfMemoryFinal)
+
 
 def reactionLong(xl):
   
@@ -220,17 +232,25 @@ def reactionLong(xl):
 
   dfReactionFinal.to_csv('dfReactionFinal.csv',index=False)
 
+  return(dfReactionFinal)
+
 
 def main():
   file = 'drive.xlsx'
   xl = pd.ExcelFile(file)
-  controlLong(xl)
-  judgementLong(xl)
-  memoryLong(xl)
-  reactionLong(xl)
-  demoLong(xl)
-  clientLong(xl)
+  
+  control = controlLong(xl)
+  judgement = judgementLong(xl)
+  memory = memoryLong(xl)
+  reaction = reactionLong(xl)
+  demo = demoLong(xl)
+  client = clientLong(xl)
 
+  dfs = [client, demo, control, judgement, memory, reaction]
+
+  dfFinal = reduce(lambda left,right: pd.merge(left,right,on='subID'), dfs) #merge all dataframes
+
+  dfFinal.to_csv('dfFinal.csv',index=False)
 
 main()
 

@@ -109,6 +109,38 @@ def dropColumns(df):
   return df
 
 
+def checkForDups(xl):
+  #looks for duplicate id/tp combinations
+  #outputs csv of duplicates
+  #returns list of duplicate ids
+
+  df = xl.parse('Clients')
+
+  df['identification_id'] = df['identification_id'].str.lower()
+
+  df = df[(~df['identification_id'].str.contains('demo')) 
+                    & (~df['identification_id'].str.contains('test'))]
+
+  df = splitIDs(df)
+
+  dups = df.duplicated(subset='identification_id', keep=False)
+
+  dfDupsFinal = df[dups]
+
+  dfDupsFinal.to_csv('dfDupsFinal.csv',index=False) #output csv of duplicates
+
+  duplicates = df[dups]['subID']
+
+  duplicateIDs = df[dups]['subID'].values
+
+  uniqueDuplicateIDs = [] 
+
+  for thing in duplicateIDs: 
+  	if thing not in uniqueDuplicateIDs: 
+  		uniqueDuplicateIDs.append(thing) 
+
+  return uniqueDuplicateIDs
+
 def clientLong(xl):
 
   dfClients = xl.parse('Clients')
@@ -132,7 +164,7 @@ def clientLong(xl):
 
   dfClientsFinal = dfClientsFinal.drop([0,1])
 
-  dfClientsFinal.to_csv('dfClientsFinal.csv',index=False)
+  #dfClientsFinal.to_csv('dfClientsFinal.csv',index=False)
 
   return(dfClientsFinal)
 
@@ -162,7 +194,7 @@ def demoLong(xl):
 
   dfDemosFinal = dropColumns(dfDemosFinal)
 
-  dfDemosFinal.to_csv('dfDemosFinal.csv',index=False)
+  #dfDemosFinal.to_csv('dfDemosFinal.csv',index=False)
 
   return(dfDemosFinal)
 
@@ -193,7 +225,7 @@ def controlLong(xl):
 
   dfControlFinal = dropColumns(dfControlFinal) #drop redundant columns
 
-  dfControlFinal.to_csv('dfControlFinal.csv',index=False) #output csv
+  #dfControlFinal.to_csv('dfControlFinal.csv',index=False) #output csv
 
   return(dfControlFinal)
 
@@ -223,7 +255,7 @@ def judgementLong(xl):
 
   dfJudgementFinal = dropColumns(dfJudgementFinal)
 
-  dfJudgementFinal.to_csv('dfJudgementFinal.csv',index=False)
+  #dfJudgementFinal.to_csv('dfJudgementFinal.csv',index=False)
 
   return(dfJudgementFinal)
 
@@ -253,7 +285,7 @@ def memoryLong(xl):
 
   dfMemoryFinal = dropColumns(dfMemoryFinal)
 
-  dfMemoryFinal.to_csv('dfMemoryFinal.csv',index=False)
+  #dfMemoryFinal.to_csv('dfMemoryFinal.csv',index=False)
 
   return(dfMemoryFinal)
 
@@ -283,7 +315,7 @@ def reactionLong(xl):
 
   dfReactionFinal = dropColumns(dfReactionFinal)
 
-  dfReactionFinal.to_csv('dfReactionFinal.csv',index=False)
+  #dfReactionFinal.to_csv('dfReactionFinal.csv',index=False)
 
   return(dfReactionFinal)
 
@@ -329,7 +361,7 @@ def collisionLong(xl):
 
   dfCollisionFinal = dropColumns(dfCollisionFinal)
 
-  dfCollisionFinal.to_csv('dfCollisionFinal.csv',index=False)
+  #dfCollisionFinal.to_csv('dfCollisionFinal.csv',index=False)
 
   return dfCollisionFinal
 
@@ -337,6 +369,8 @@ def main():
   file = 'drive.xlsx'
   xl = pd.ExcelFile(file)
   
+  dups = checkForDups(xl)
+
   control = controlLong(xl)
   judgement = judgementLong(xl)
   memory = memoryLong(xl)
@@ -345,7 +379,23 @@ def main():
   client = clientLong(xl)
   collision = collisionLong(xl)
 
-  dfs = [client, demo, control, collision, judgement, memory, reaction]
+  dfClientsFinal = client[~client['subID'].isin(dups)]
+  dfControlFinal = control[~control['subID'].isin(dups)]
+  dfJudgementFinal = judgement[~judgement['subID'].isin(dups)]
+  dfMemoryFinal = memory[~memory['subID'].isin(dups)]
+  dfReactionFinal = reaction[~reaction['subID'].isin(dups)]
+  dfDemosFinal = demo[~demo['subID'].isin(dups)]
+  dfCollisionFinal = collision[~collision['subID'].isin(dups)]
+
+  dfClientsFinal.to_csv('dfClientsFinal.csv',index=False)
+  dfControlFinal.to_csv('dfControlFinal.csv',index=False)
+  dfJudgementFinal.to_csv('dfJudgementFinal.csv',index=False)
+  dfMemoryFinal.to_csv('dfMemoryFinal.csv',index=False)
+  dfReactionFinal.to_csv('dfReactionFinal.csv',index=False)
+  dfDemosFinal.to_csv('dfDemosFinal.csv',index=False)
+  dfCollisionFinal.to_csv('dfCollisionFinal.csv',index=False)
+
+  dfs = [dfClientsFinal, dfControlFinal, dfJudgementFinal, dfMemoryFinal, dfReactionFinal, dfDemosFinal, dfCollisionFinal]
 
   dfFinal = reduce(lambda left,right: pd.merge(left,right,on='subID'), dfs) #merge all dataframes
 

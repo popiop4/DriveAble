@@ -1,4 +1,5 @@
 import pandas as pd
+import re
 from functools import reduce
 
 
@@ -32,6 +33,8 @@ def smushNames(df, sheet):
       if (index == 0):
         newNames.append('subID')
       else:
+        name = re.sub('.\d', '', name)
+        name = re.sub('\d', '', name)
         new = name + '_' + df.iloc[0, index] + '_lap' + df.iloc[1, index]
         newNames.append(new)
       index = index + 1
@@ -42,6 +45,8 @@ def smushNames(df, sheet):
       if (index == 0):
         newNames.append('subID')
       else:
+        name = re.sub('.\d', '', name)
+        name = re.sub('\d', '', name)
         new = name + '_' + df.iloc[0, index] + '_stage' + df.iloc[1, index] + '_trial' + df.iloc[2, index]
         newNames.append(new)
       index = index + 1
@@ -52,6 +57,8 @@ def smushNames(df, sheet):
       if (index == 0):
         newNames.append('subID')
       else:
+        name = re.sub('.\d', '', name)
+        name = re.sub('\d', '', name)
         new = name + '_' + df.iloc[0, index] + '_' + df.iloc[1, index] + '_demonum' + df.iloc[2, index]
         newNames.append(new)
       index = index + 1
@@ -62,9 +69,23 @@ def smushNames(df, sheet):
       if (index == 0):
         newNames.append('subID')
       else:
+        name = re.sub('.\d', '', name)
+        name = re.sub('\d', '', name)
         new = name + '_' + df.iloc[0, index]
         newNames.append(new)
       index = index + 1
+
+    #collision sheet
+  if (sheet == 'collision'):
+    for name in oldNames:
+      if (index == 0):
+        newNames.append('subID')
+      else:
+        name = re.sub('.\d', '', name)
+        name = re.sub('\d', '', name)
+        new = name + '_' + df.iloc[0, index] + '_ctrl' + df.iloc[1, index] + '_trial' + df.iloc[2, index]
+        newNames.append(new)
+      index = index + 1 
 
   df.columns = newNames
   return df
@@ -163,6 +184,7 @@ def controlLong(xl):
                            )#.reset_index()
 
   dfControlFinal.to_csv('dfControlFinal.csv',index=True) #put into csv
+  
   dfControlFinal = pd.read_csv('dfControlFinal.csv') #read csv into dataframe to loses multiindex, not sure how else to do this
 
   dfControlFinal = smushNames(dfControlFinal, 'control') #update column names
@@ -192,6 +214,7 @@ def judgementLong(xl):
                            )#.reset_index()
 
   dfJudgementFinal.to_csv('dfJudgementFinal.csv',index=True)
+  
   dfJudgementFinal = pd.read_csv('dfJudgementFinal.csv')
 
   dfJudgementFinal = smushNames(dfJudgementFinal, 'judgement')
@@ -246,11 +269,12 @@ def reactionLong(xl):
 
   dfReactionFinal = dfReaction.pivot_table(index=['subID'],
                            columns=['TP','trial_stage','trial_number'],
-                           aggfunc=lambda x: ' !!!!!!!!! '.join(x)
-                           #aggfunc='first'
+                           #aggfunc=lambda x: ' !!!!!!!!! '.join(x)
+                           aggfunc='first'
                            )#.reset_index()
 
   dfReactionFinal.to_csv('dfReactionFinal.csv',index=True)
+  
   dfReactionFinal = pd.read_csv('dfReactionFinal.csv')
 
   dfReactionFinal = smushNames(dfReactionFinal, 'reaction')
@@ -263,6 +287,51 @@ def reactionLong(xl):
 
   return(dfReactionFinal)
 
+def collisionLong(xl):
+  dfCollision= xl.parse('Control Collision')
+
+  dfCollision = dfCollision[(~dfCollision['identification_id'].str.contains('demo')) 
+                      & (~dfCollision['identification_id'].str.contains('test'))]
+
+  ctrlIDs = []
+  lastID = ''
+  lastCtrl = 0
+  newCtrl = 1
+
+  for ctrl, fullID in zip(dfCollision['ctrl_id'], dfCollision['identification_id']):
+    if(fullID != lastID):
+      newCtrl = 1
+      ctrlIDs.append(newCtrl)
+    elif(fullID == lastID and ctrl != lastCtrl):
+      newCtrl = newCtrl + 1
+      ctrlIDs.append(newCtrl)
+    else:
+      ctrlIDs.append(newCtrl)
+    lastID = fullID
+    lastCtrl = ctrl
+
+  dfCollision['new_ctrl_id']=ctrlIDs
+
+  dfCollision = splitIDs(dfCollision)
+
+  dfCollisionFinal = dfCollision.pivot_table(index=['subID'],
+                           columns=['TP','new_ctrl_id','trial'],
+                            aggfunc='first'
+                           )#.reset_index()
+
+  dfCollisionFinal.to_csv('dfCollisionFinal.csv',index=True)
+
+  dfCollisionFinal = pd.read_csv('dfCollisionFinal.csv')
+
+  dfCollisionFinal = smushNames(dfCollisionFinal, 'collision')
+
+  dfCollisionFinal = dfCollisionFinal.drop([0,1,2,3])
+
+  dfCollisionFinal = dropColumns(dfCollisionFinal)
+
+  dfCollisionFinal.to_csv('dfCollisionFinal.csv',index=False)
+
+  return dfCollisionFinal
 
 def main():
   file = 'drive.xlsx'
@@ -274,8 +343,9 @@ def main():
   reaction = reactionLong(xl)
   demo = demoLong(xl)
   client = clientLong(xl)
+  collision = collisionLong(xl)
 
-  dfs = [client, demo, control, judgement, memory, reaction]
+  dfs = [client, demo, control, collision, judgement, memory, reaction]
 
   dfFinal = reduce(lambda left,right: pd.merge(left,right,on='subID'), dfs) #merge all dataframes
 

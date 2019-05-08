@@ -331,22 +331,25 @@ def collisionLong(xl, dups):
 
   dfCollision = dfCollision[~dfCollision['subID'].isin(dups)]
 
+  counter = 0
   ctrlIDs = []
   lastID = ''
   lastCtrl = 0
   newCtrl = 1
 
   for ctrl, fullID in zip(dfCollision['ctrl_id'], dfCollision['identification_id']):
-    if(fullID != lastID):
+    if(fullID != lastID or newCtrl == 4):
       newCtrl = 1
       ctrlIDs.append(newCtrl)
-    elif(fullID == lastID and ctrl != lastCtrl):
+      counter = 0
+    elif(fullID == lastID and ctrl > lastCtrl and newCtrl != 3):
       newCtrl = newCtrl + 1
       ctrlIDs.append(newCtrl)
     else:
       ctrlIDs.append(newCtrl)
     lastID = fullID
     lastCtrl = ctrl
+    counter = counter + 1
 
   dfCollision['new_ctrl_id']=ctrlIDs
 
@@ -354,7 +357,8 @@ def collisionLong(xl, dups):
 
   dfCollisionFinal = dfCollision.pivot_table(index=['subID'],
                            columns=['TP','new_ctrl_id','trial'],
-                            aggfunc='first'
+                            aggfunc='first',
+                            dropna=False
                            )#.reset_index()
 
   dfCollisionFinal.to_csv('dfCollisionFinal.csv',index=True)
@@ -376,6 +380,12 @@ def main():
   xl = pd.ExcelFile(file)
   
   dups = checkForDups(xl)
+  okDups = [6020,6028]
+
+  for thing in okDups:
+    stringThing = str(thing)
+    if stringThing in dups:
+      dups.remove(stringThing) 
 
   control = controlLong(xl)
   judgement = judgementLong(xl)

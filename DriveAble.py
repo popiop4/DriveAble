@@ -102,7 +102,9 @@ def dropColumns(df):
     'examiner_id' not in column and
     'birth_date' not in column and
     'assessment_time_start' not in column and
-    'sex' not in column):
+    'sex' not in column and
+    'data_source' not in column and
+    'care_srv' not in column):
       cols.append(column)
 
   df=df[cols]
@@ -319,11 +321,15 @@ def reactionLong(xl):
 
   return(dfReactionFinal)
 
-def collisionLong(xl):
+def collisionLong(xl, dups):
   dfCollision= xl.parse('Control Collision')
 
   dfCollision = dfCollision[(~dfCollision['identification_id'].str.contains('demo')) 
                       & (~dfCollision['identification_id'].str.contains('test'))]
+
+  dfCollision = splitIDs(dfCollision)
+
+  dfCollision = dfCollision[~dfCollision['subID'].isin(dups)]
 
   ctrlIDs = []
   lastID = ''
@@ -344,7 +350,7 @@ def collisionLong(xl):
 
   dfCollision['new_ctrl_id']=ctrlIDs
 
-  dfCollision = splitIDs(dfCollision)
+  #dfCollision = splitIDs(dfCollision)
 
   dfCollisionFinal = dfCollision.pivot_table(index=['subID'],
                            columns=['TP','new_ctrl_id','trial'],
@@ -377,7 +383,7 @@ def main():
   reaction = reactionLong(xl)
   demo = demoLong(xl)
   client = clientLong(xl)
-  collision = collisionLong(xl)
+  collision = collisionLong(xl, dups)
 
   dfClientsFinal = client[~client['subID'].isin(dups)]
   dfControlFinal = control[~control['subID'].isin(dups)]

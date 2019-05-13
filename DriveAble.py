@@ -45,8 +45,11 @@ def smushNames(df, sheet):
       if (index == 0):
         newNames.append('subID')
       else:
-        name = re.sub('.\d', '', name)
-        name = re.sub('\d', '', name)
+        if ('gap' not in name):
+          name = re.sub('.\d', '', name)
+          name = re.sub('\d', '', name)
+        elif (name != 'gap_1_size' and name != 'gap_2_size'):
+          name = re.sub('.\d*$', '', name)
         new = name + '_' + df.iloc[0, index] + '_stage' + df.iloc[1, index] + '_trial' + df.iloc[2, index]
         newNames.append(new)
       index = index + 1
@@ -142,6 +145,26 @@ def checkForDups(xl):
   		uniqueDuplicateIDs.append(thing) 
 
   return uniqueDuplicateIDs
+
+
+def finalNames(df, sheet):
+  #adds task/tab names to the front of the column names so there will be no duplicates
+  #in the final merge
+  index = 0
+  oldNames = df.columns
+  newNames = []
+    
+  for name in oldNames:
+    if (index == 0):
+      newNames.append('subID')
+    else:
+      new = sheet + '_' + name
+      newNames.append(new)
+    index = index + 1
+
+  df.columns = newNames
+  return df
+
 
 def clientLong(xl):
 
@@ -410,6 +433,15 @@ def main():
   dfReactionFinal.to_csv('dfReactionFinal.csv',index=False)
   dfDemosFinal.to_csv('dfDemosFinal.csv',index=False)
   dfCollisionFinal.to_csv('dfCollisionFinal.csv',index=False)
+
+  #add tab/task names to front of column names to prevent duplicates
+  dfClientsFinal = finalNames(dfClientsFinal, 'clients')
+  dfControlFinal = finalNames(dfControlFinal, 'control')
+  dfJudgementFinal = finalNames(dfJudgementFinal, 'judgement')
+  dfMemoryFinal = finalNames(dfMemoryFinal, 'memory')
+  dfReactionFinal = finalNames(dfReactionFinal, 'reaction')
+  dfDemosFinal = finalNames(dfDemosFinal, 'demos')
+  dfCollisionFinal = finalNames(dfCollisionFinal, 'collision')
 
   dfs = [dfClientsFinal, dfControlFinal, dfJudgementFinal, dfMemoryFinal, dfReactionFinal, dfDemosFinal, dfCollisionFinal]
 
